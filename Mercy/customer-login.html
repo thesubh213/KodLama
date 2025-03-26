@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Dashboard - HealthMap India</title>
+  <link rel="stylesheet" href="stylesheet.css">
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --success-color: #28a745;
+      --hover-brightness: 1.15;
+      --shadow-color: rgba(0, 0, 0, 0.15);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header, footer {
+      text-align: center;
+      padding: 15px;
+      width: 100%;
+      background-color: #ffffff;
+      box-shadow: 0px 4px 6px var(--shadow-color);
+    }
+
+    header {
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
+    }
+
+    footer {
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+    }
+
+    .dashboard-container {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+      margin: 15px;
+    }
+
+    .btn.success {
+      background: var(--success-color);
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      filter: brightness(var(--hover-brightness));
+      box-shadow: 0 6px 18px var(--shadow-color);
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeIn .6s ease forwards;
+    }
+
+    .popup-box {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px var(--shadow-color);
+      width: 400px;
+      animation: slideIn .6s ease forwards;
+      text-align: center;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+      margin-bottom: 15px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0px); opacity: 1; }
+    }
+
+    @media (max-width: 500px) {
+      .popup-box {
+        width: 90%;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>🌏 Customer Dashboard</h1>
+  <p>Manage Your Files and Uploads</p>
+</header>
+
+<div class="dashboard-container">
+  <button class="btn success" onclick="showPopup('view')">View Uploaded Files 📁</button>
+  <button class="btn" onclick="showPopup('upload')">Upload New File ⬆️</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="popup-box" id="popup-box">
+    <!-- Popup Content -->
+  </div>
+</div>
+
+<footer>&copy; 2024 HealthMap India</footer>
+
+<script>
+  const overlay = document.getElementById('overlay');
+  const popupBox = document.getElementById('popup-box');
+
+  function showPopup(type) {
+    overlay.style.display = 'flex';
+    if (type === 'upload') {
+      popupBox.innerHTML = `
+                <h2>📤 Upload a File</h2>
+                <input type="file" id="uploadFile"><br>
+                <button class="btn" onclick="uploadFile()">Upload Now</button>
+                <button class="btn success" onclick="closePopup()">Cancel</button>
+                `;
+    } else if (type === 'view') {
+      popupBox.innerHTML = `
+                <h2>📁 Your Uploaded Files</h2>
+                <div id="file-list">Loading files...</div><br>
+                <button class="btn success" onclick="closePopup()">Close</button>
+                `;
+      fetchFiles();
+    }
+  }
+
+  function closePopup() {
+    overlay.style.display = 'none';
+  }
+
+  async function uploadFile() {
+    const fileInput = document.getElementById('uploadFile');
+    if (fileInput.files.length === 0) {
+      alert("Please select a file first.");
+      return;
+    }
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const resp = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST', credentials: 'include', body: formData
+      });
+      if (resp.ok) {
+        alert('File uploaded successfully.');
+      } else {
+        alert('Failed to upload file.');
+      }
+    } catch (error) {
+      alert('Error occurred while uploading file.');
+    }
+    closePopup();
+  }
+
+  async function fetchFiles() {
+    try {
+      const resp = await fetch('http://localhost:5000/api/files', { credentials: 'include' });
+      const data = await resp.json();
+      const listContainer = document.getElementById('file-list');
+      listContainer.innerHTML = data.files.length ?
+              data.files.map(f => `<p>${f}</p>`).join('') :
+              '<p>No files uploaded.</p>';
+    } catch (error) {
+      document.getElementById('file-list').innerHTML = '<p>Error fetching files.</p>';
+    }
+  }
+</script>
+</body>
+</html>
