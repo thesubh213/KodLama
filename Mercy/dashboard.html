@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Healthcare Dashboard</title>
+  <link rel="stylesheet" href="stylesheet.css">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #eef4fc;
+    }
+
+    /* Modal Styles with smooth scale-in/out animation */
+    .modal {
+      position: fixed; inset: 0; z-index: 1000;
+      background-color: rgba(0,0,0,0.6);
+      display: none; justify-content: center; align-items: center;
+    }
+
+    .modal-content {
+      background-color: white; padding: 25px; border-radius: 10px;
+      width: 90%; max-width: 600px;
+      transform: scale(0.5); opacity: 0;
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal.open .modal-content {
+      transform: scale(1); opacity: 1;
+    }
+
+    .close {
+      float: right; cursor: pointer; font-size: 22px; color: #555;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%; padding: 8px; margin-top: 8px;
+      border-radius: 5px; border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    .font-controls button, .submit-btn, .file-upload-btn {
+      padding: 8px 15px; margin-top: 15px; cursor: pointer;
+      border: none; color: #fff; border-radius: 5px;
+      transition: 0.3s ease; font-size: 14px;
+    }
+
+    .submit-btn { background-color: #28a745; }
+    .submit-btn:hover { background-color: #218838; }
+
+    .file-upload-btn { background-color: #007bff; }
+    .file-upload-btn:hover { background-color: #0056b3; }
+
+    .font-controls button {
+      background-color: #6c757d; margin-right: 5px;
+    }
+    .font-controls button:hover { background-color: #595e64; }
+
+    .uploaded-files {
+      margin-top: 20px; background-color: #fff; padding: 15px;
+      border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .uploaded-files ul {
+      padding-left: 20px;
+    }
+
+    .button-group .btn {
+      text-decoration: none; color: #fff; padding: 10px 20px;
+      background-color: #4CAF50; border-radius: 8px; display: inline-block;
+      transition: background-color 0.3s ease;
+      cursor: pointer;
+    }
+
+    .button-group .btn:hover {
+      background-color: #388E3C;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Healthcare Dashboard</h1>
+</header>
+
+<main>
+  <div class="button-group">
+    <span class="btn" onclick="openModal()">🗃️ Add Health Records</span>
+    <span class="btn" onclick="loadUploadedFiles()">🔍 View Uploaded Files</span>
+  </div>
+
+  <!-- Uploaded Files Section -->
+  <div class="uploaded-files" id="uploadedFiles">
+    <h3>Recent Uploaded Files:</h3>
+    <ul id="fileList"><li>No recent uploads yet.</li></ul>
+  </div>
+</main>
+
+<!-- Popup Modal -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2 id="userGreeting">Hello, User</h2>
+
+    <label>Disease Diagnosis:</label>
+    <input type="text" id="disease">
+
+    <label>Disease Description:</label>
+    <textarea id="description" rows="3"></textarea>
+
+    <label>Medicines Required:</label>
+    <input type="text" id="medicines">
+
+    <!-- Font size controls -->
+    <div class="font-controls">
+      <button onclick="changeFontSize(1)">➕ Increase Font</button>
+      <button onclick="changeFontSize(-1)">➖ Decrease Font</button>
+    </div>
+
+    <!-- File Upload -->
+    <input type="file" id="fileInput">
+    <button class="file-upload-btn" onclick="uploadFile()">📤 Upload File</button>
+
+    <button class="submit-btn" onclick="submitRecord()">Submit Record</button>
+  </div>
+</div>
+
+<footer>
+  &copy; 2024 HealthCare Portal
+</footer>
+
+<script>
+  let currentFontSize = 14;
+
+  function openModal() {
+    document.getElementById('modal').classList.add('open');
+    fetch('http://localhost:5000/api/dashboard', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+              document.getElementById('userGreeting').innerText = `Hello, ${data.username || 'User'}`;
+            });
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  function changeFontSize(change) {
+    currentFontSize = Math.min(Math.max(currentFontSize + change, 12), 20);
+    document.querySelectorAll('.modal-content input, .modal-content textarea').forEach(el => {
+      el.style.fontSize = currentFontSize + 'px';
+    });
+  }
+
+  function submitRecord() {
+    const record = {
+      disease: document.getElementById('disease').value,
+      description: document.getElementById('description').value,
+      medicines: document.getElementById('medicines').value.split(',').map(m => m.trim()),
+    };
+    console.log('Submitting:', record);
+    alert('Record submitted!');
+    closeModal();
+  }
+
+  function uploadFile() {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file) {
+      alert('Please select a file first!');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    fetch('http://localhost:5000/api/upload', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    }).then(res => res.json())
+            .then(data => {
+              alert('File uploaded: ' + data.uploadedFile);
+              loadUploadedFiles();
+            });
+  }
+
+  function loadUploadedFiles() {
+    fetch('http://localhost:5000/api/files', { credentials: 'include' })
+            .then(res => res.json())
+            .then(files => {
+              const ul = document.getElementById('fileList');
+              ul.innerHTML = '';
+              if (files.length === 0) ul.innerHTML = '<li>No recent uploads yet.</li>';
+              else files.forEach(f => ul.innerHTML += `<li>${f}</li>`);
+            });
+  }
+
+  document.addEventListener('click', e => {
+    if (e.target === document.getElementById('modal')) closeModal();
+  });
+
+  window.onload = loadUploadedFiles;
+</script>
+
+</body>
+</html>

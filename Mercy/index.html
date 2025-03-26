@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HealthMap India</title>
+  <link rel="stylesheet" href="stylesheet.css">
+  <link rel="icon" href="images/logo.png" type="image/png">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    }
+
+    header, footer {
+      background: transparent;
+      color: #ffffff;
+      padding: 20px;
+    }
+
+    header h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      font-size: 1.2rem;
+      font-weight: 300;
+      letter-spacing: 1px;
+    }
+
+    footer {
+      font-size: 0.9rem;
+      margin-top: auto;
+    }
+
+    .main-container {
+      background-color: #ffffff;
+      width: 80%;
+      max-width: 700px;
+      border-radius: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      padding: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .btn {
+      text-decoration: none;
+      padding: 15px;
+      font-size: 1.1rem;
+      border-radius: 50px;
+      color: #ffffff;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 6px 15px var(--shadow-color);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .user-btn {
+      background-color: var(--secondary-color);
+    }
+
+    .healthcare-btn {
+      background-color: var(--primary-color);
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 2px;
+      background: #fff;
+      transition: width 0.3s ease;
+    }
+
+    .btn:hover::after {
+      width: 60%;
+    }
+
+    .btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 768px) {
+      header h1 { font-size: 2rem; }
+      .main-container { width: 90%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌏 HealthMap India</h1>
+  <p>Your complete healthcare and hotspot information platform</p>
+</header>
+
+<div class="main-container">
+  <div class="button-group">
+    <a href="customer.html" class="btn user-btn">👤 User</a>
+    <a href="healthcare.html" class="btn healthcare-btn">🏥 Healthcare Centers</a>
+  </div>
+</div>
+
+<footer>
+  &copy; 2024 HealthMap India
+</footer>
+<script>
+  // Example login (Replace with real form inputs)
+  const doLogin = async(username, password) => {
+    let response = await fetch('http://localhost:5000/api/login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'include',
+      body: JSON.stringify({username, password})
+    });
+    const data = await response.json();
+    console.log(data);
+  };
+
+  // Check session (simple check)
+  const checkDashboard = async() => {
+    let resp = await fetch('http://localhost:5000/api/dashboard', {
+      credentials: 'include'
+    });
+    let data = await resp.json();
+    document.getElementById('content').innerHTML = data.message || 'Not authorized';
+  };
+
+  // File upload (simple example)
+  const uploadFile = async(file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    let resp = await fetch('http://localhost:5000/api/upload', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+    let data = await resp.json();
+    console.log('File uploaded:', data);
+  };
+
+  // Example usage:
+  // 1. Perform login (use your specific username and password)
+  doLogin('testuser', 'Test@123');
+  // 2. Check dashboard access
+  setTimeout(checkDashboard, 2000);
+  // 3. Upload a file example (attached through file input in real scenario)
+</script>
+
+
+</body>
+</html>
